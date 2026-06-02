@@ -1,0 +1,31 @@
+{
+  "name": "luxury-crystal-commerce",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8888",
+    "build": "next build",
+    "start": "next start -p 8888",
+    "lint": "next lint",
+    "seed:categories": "node scripts/seed-woocommerce-categories.mjs",
+    "seed:categories:dry-run": "node scripts/seed-woocommerce-categories.mjs --dry-run"
+  },
+  "dependencies": {
+    "embla-carousel-react": "^8.6.0",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest"
+  }
+}
