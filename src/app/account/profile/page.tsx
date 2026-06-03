@@ -1,5 +1,5 @@
 import ProfileForm from "@/components/account/ProfileForm";
-import { fetchCustomer, requireSession } from "@/lib/auth-server";
+import { fetchCustomer, readSession } from "@/lib/auth-server";
 
 export const metadata = {
   title: "Profile",
@@ -8,7 +8,8 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  const session = await requireSession();
+  // Layout already validated; read the cookie directly (no writes).
+  const session = await readSession();
   if (!session) return null;
 
   const profile = await fetchCustomer(session.authToken);

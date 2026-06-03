@@ -355,10 +355,53 @@ export async function refreshAuthToken(
   }
 }
 
+export type ActiveSessionResult =
+  | { status: "active"; session: Session }
+  | { status: "missing" }
+  | { status: "refresh-required" }
+  | { status: "invalid" };
+
 /**
- * Resolves the active session and re-validates against the WordPress server.
- * Falls back to refresh-token flow if the auth token has expired.
- * Returns null if the session is invalid or absent.
+ * Render-safe session reader. Validates the JWT against WordPress's `viewer`
+ * query but NEVER writes cookies — safe to call from Server Components.
+ *
+ * Returns one of:
+ *   - { status: "active", session }     — token is valid, render
+ *   - { status: "missing" }             — no cookie, redirect to /login
+ *   - { status: "refresh-required" }    — cookie present but stale; caller
+ *                                          should bounce through
+ *                                          /api/auth/refresh to rotate the JWT
+ *   - { status: "invalid" }             — cookie present but no refresh token
+ *                                          and viewer rejected; redirect to
+ *                                          /api/auth/logout to clear it
+ */
+export async function getActiveSession(): Promise<ActiveSessionResult> {
+  const session = await readSession();
+  if (!session) return { status: "missing" };
+
+  const viewer = await fetchViewer(session.authToken);
+  if (viewer) {
+    return {
+      status: "active",
+      session: { ...session, user: { ...session.user, ...viewer } },
+    };
+  }
+
+  if (session.refreshToken) {
+    return { status: "refresh-required" };
+  }
+  return { status: "invalid" };
+}
+
+/**
+ * Route-handler-only session resolver. Re-validates against WordPress and,
+ * if the auth token has expired, rotates it via the refresh token —
+ * persisting the new token to the cookie. MUST NOT be called from a
+ * Server Component or `generateMetadata` (Next.js forbids cookie writes
+ * outside Server Actions and Route Handlers).
+ *
+ * Returns null if the session cannot be recovered, in which case the cookie
+ * has already been cleared.
  */
 export async function requireSession(): Promise<Session | null> {
   const session = await readSession();

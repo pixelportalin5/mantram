@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { fetchCustomer, requireSession } from "@/lib/auth-server";
+import { fetchCustomer, readSession } from "@/lib/auth-server";
 import { formatDate, formatPriceText } from "@/lib/format";
 
 export const metadata = {
@@ -11,7 +11,8 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
-  const session = await requireSession();
+  // Layout already validated; read the cookie directly (no writes).
+  const session = await readSession();
   if (!session) return null;
 
   const profile = await fetchCustomer(session.authToken);

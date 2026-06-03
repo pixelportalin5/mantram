@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import CartDrawer from "@/components/layout/CartDrawer";
+import SearchBar from "@/components/search/SearchBar";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import type { ProductCategory } from "@/lib/graphql";
@@ -54,7 +55,6 @@ const ICONS = {
 };
 
 export default function HeaderClient({ categories }: HeaderClientProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -63,9 +63,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
   const [cartOpen, setCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const [searchValue, setSearchValue] = useState("");
   const accountRef = useRef<HTMLDivElement | null>(null);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const { items } = useCart();
   const cartQuantity = items.reduce((total, item) => total + item.quantity, 0);
@@ -103,16 +101,8 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
   }, [accountOpen]);
 
   useEffect(() => {
-    if (searchOpen) {
-      const timer = setTimeout(() => searchInputRef.current?.focus(), 50);
-      return () => clearTimeout(timer);
-    }
-  }, [searchOpen]);
-
-  useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setSearchOpen(false);
         setMobileOpen(false);
         setAccountOpen(false);
         setMegaOpen(false);
@@ -128,18 +118,6 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
       document.body.style.overflow = "";
     };
   }, [mobileOpen, cartOpen]);
-
-  const handleSearchSubmit = useCallback(
-    (event: React.FormEvent) => {
-      event.preventDefault();
-      const trimmed = searchValue.trim();
-      if (!trimmed) return;
-      router.push(`/shop?q=${encodeURIComponent(trimmed)}`);
-      setSearchOpen(false);
-      setSearchValue("");
-    },
-    [router, searchValue],
-  );
 
   const displayName = user?.firstName || user?.displayName || user?.email?.split("@")[0];
 
@@ -404,53 +382,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
         </nav>
       </header>
 
-      {searchOpen ? (
-        <div className="fixed inset-0 z-[70]">
-          <div
-            className="absolute inset-0 bg-black/40 animate-fade-in"
-            onClick={() => setSearchOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="relative w-full bg-white animate-fade-in-up">
-            <div className="container-app flex items-center gap-4 border-b border-[var(--color-line)] py-6">
-              <form onSubmit={handleSearchSubmit} className="flex flex-1 items-center gap-3">
-                <Icon path={ICONS.search} className="h-5 w-5 text-[var(--color-faint)]" />
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  value={searchValue}
-                  onChange={(event) => setSearchValue(event.target.value)}
-                  placeholder="Search products, categories, or editorial"
-                  className="w-full bg-transparent text-lg outline-none placeholder:text-[var(--color-faint)]"
-                />
-              </form>
-              <button
-                type="button"
-                onClick={() => setSearchOpen(false)}
-                aria-label="Close search"
-                className="inline-flex h-10 w-10 items-center justify-center"
-              >
-                <Icon path={ICONS.close} className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="container-app py-8">
-              <p className="eyebrow">Popular Categories</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {categories.slice(0, 8).map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/shop?category=${category.slug}`}
-                    onClick={() => setSearchOpen(false)}
-                    className="border border-[var(--color-line)] px-4 py-2 text-xs uppercase tracking-[0.18em] hover:border-[var(--color-ink-soft)]"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <SearchBar open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-[80] lg:hidden">

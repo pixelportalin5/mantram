@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { fetchCustomer, requireSession } from "@/lib/auth-server";
+import { fetchCustomer, readSession } from "@/lib/auth-server";
 import { formatDate, formatPriceText } from "@/lib/format";
 
 export const metadata = {
@@ -10,8 +10,9 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
-  const session = await requireSession();
-  // requireSession is also checked in the layout — narrow type here
+  // The account layout has already validated the session via getActiveSession;
+  // here we only need the raw cookie payload (read-only, no writes).
+  const session = await readSession();
   if (!session) return null;
 
   const profile = await fetchCustomer(session.authToken);

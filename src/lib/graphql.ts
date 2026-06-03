@@ -730,3 +730,135 @@ export async function getPageByUri(uri: string): Promise<WordPressPage | null> {
 
   return data.page;
 }
+
+export type SearchProductHit = {
+  id: string;
+  databaseId: number;
+  name: string;
+  slug: string;
+  image: ProductImage | null;
+  price: string | null;
+  category: { name: string; slug: string } | null;
+};
+
+export type SearchCategoryHit = {
+  id: string;
+  slug: string;
+  name: string;
+  count: number | null;
+};
+
+export type SearchSuggestions = {
+  products: SearchProductHit[];
+  categories: SearchCategoryHit[];
+};
+
+type RawSearchProduct = {
+  id: string;
+  databaseId: number;
+  name: string;
+  slug: string;
+  image: ProductImage | null;
+  price?: string | null;
+  productCategories?: { nodes: Array<{ name: string; slug: string }> } | null;
+};
+
+const SEARCH_SUGGESTIONS_QUERY = `
+  query SearchSuggestions($q: String!, $productLimit: Int!, $categoryLimit: Int!) {
+    products(first: $productLimit, where: { search: $q, status: "publish" }) {
+      nodes {
+        id
+        databaseId
+        name
+        slug
+        image {
+          sourceUrl
+          altText
+        }
+        productCategories(first: 1) {
+          nodes {
+            name
+            slug
+          }
+        }
+        ... on SimpleProduct {
+          price
+        }
+        ... on VariableProduct {
+          price
+        }
+      }
+    }
+    productCategories(first: $categoryLimit, where: { search: $q, hideEmpty: true }) {
+      nodes {
+        id
+        slug
+        name
+        count
+      }
+    }
+  }
+`;
+
+const TRENDING_QUERY = `
+  query TrendingCategories($limit: Int!) {
+    productCategories(first: $limit, where: { hideEmpty: true, orderby: COUNT, order: DESC }) {
+      nodes {
+        id
+        slug
+        name
+        count
+      }
+    }
+  }
+`;
+
+function mapSearchProduct(product: RawSearchProduct): SearchProductHit {
+  const category = product.productCategories?.nodes?.[0] ?? null;
+  return {
+    id: product.id,
+    databaseId: product.databaseId,
+    name: product.name,
+    slug: product.slug,
+    image: product.image,
+    price: product.price ?? null,
+    category: category ? { name: category.name, slug: category.slug } : null,
+  };
+}
+
+export async function searchSuggestions(
+  query: string,
+  options: { productLimit?: number; categoryLimit?: number } = {},
+): Promise<SearchSuggestions> {
+  const trimmed = query.trim();
+
+  if (trimmed.length < 2) {
+    return { products: [], categories: [] };
+  }
+
+  const data = await graphQLRequest<{
+    products: { nodes: RawSearchProduct[] } | null;
+    productCategories: { nodes: SearchCategoryHit[] } | null;
+  }>(SEARCH_SUGGESTIONS_QUERY, {
+    q: trimmed,
+    productLimit: options.productLimit ?? 6,
+    categoryLimit: options.categoryLimit ?? 6,
+  });
+
+  return {
+    products: (data.products?.nodes ?? []).map(mapSearchProduct),
+    categories: data.productCategories?.nodes ?? [],
+  };
+}
+
+export async function getTrendingCategories(limit = 6): Promise<SearchCategoryHit[]> {
+  try {
+    const data = await graphQLRequest<{
+      productCategories: { nodes: SearchCategoryHit[] } | null;
+    }>(TRENDING_QUERY, { limit });
+    return data.productCategories?.nodes ?? [];
+  } catch {
+    // Fallback for stores that don't expose COUNT orderby on term connections
+    return getProductCategories(limit);
+  }
+}
