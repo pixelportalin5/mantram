@@ -107,6 +107,13 @@ export type ProductListingInput = {
   search?: string | null;
 };
 
+export type PostCategory = {
+  id: string;
+  slug: string;
+  name: string;
+  count: number | null;
+};
+
 export type BlogPost = {
   id: string;
   slug: string;
@@ -116,6 +123,9 @@ export type BlogPost = {
   date: string | null;
   featuredImage: {
     node: ProductImage | null;
+  } | null;
+  categories?: {
+    nodes: Array<{ name: string; slug: string }>;
   } | null;
 };
 
@@ -204,21 +214,46 @@ export const PRODUCT_FIELDS = `
     sourceUrl
     altText
   }
-  galleryImages {
-    nodes {
-      sourceUrl
-      altText
-    }
-  }
   ... on SimpleProduct {
     price
     regularPrice
     salePrice
+    galleryImages {
+      nodes {
+        sourceUrl
+        altText
+      }
+    }
   }
   ... on VariableProduct {
     price
     regularPrice
     salePrice
+    galleryImages {
+      nodes {
+        sourceUrl
+        altText
+      }
+    }
+  }
+  ... on ExternalProduct {
+    price
+    regularPrice
+    salePrice
+    galleryImages {
+      nodes {
+        sourceUrl
+        altText
+      }
+    }
+  }
+  ... on GroupProduct {
+    galleryImages {
+      nodes {
+        sourceUrl
+        altText
+      }
+    }
   }
 `;
 
@@ -543,12 +578,6 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
           ${PRODUCT_FIELDS}
           shortDescription
           description
-          galleryImages {
-            nodes {
-              sourceUrl
-              altText
-            }
-          }
           productCategories {
             nodes {
               id
@@ -643,6 +672,26 @@ export async function getHomeData(): Promise<{
   };
 }
 
+const POST_FIELDS = `
+  id
+  slug
+  title
+  excerpt
+  date
+  featuredImage {
+    node {
+      sourceUrl
+      altText
+    }
+  }
+  categories(first: 3) {
+    nodes {
+      name
+      slug
+    }
+  }
+`;
+
 export async function getLatestPosts(limit: number): Promise<BlogPost[]> {
   const data = await graphQLRequest<{
     posts: { nodes: BlogPost[] } | null;
@@ -651,17 +700,7 @@ export async function getLatestPosts(limit: number): Promise<BlogPost[]> {
       query GetLatestPosts($first: Int!) {
         posts(first: $first, where: { orderby: { field: DATE, order: DESC } }) {
           nodes {
-            id
-            slug
-            title
-            excerpt
-            date
-            featuredImage {
-              node {
-                sourceUrl
-                altText
-              }
-            }
+            ${POST_FIELDS}
           }
         }
       }
@@ -672,6 +711,90 @@ export async function getLatestPosts(limit: number): Promise<BlogPost[]> {
   );
 
   return data.posts?.nodes ?? [];
+}
+
+export async function getPosts(input: {
+  first?: number;
+  categorySlug?: string | null;
+  excludeIds?: number[];
+} = {}): Promise<BlogPost[]> {
+  const { first = 12, categorySlug = null, excludeIds = [] } = input;
+
+  const data = await graphQLRequest<{
+    posts: { nodes: BlogPost[] } | null;
+  }>(
+    `
+      query GetPosts($first: Int!, $categoryName: String, $notIn: [ID]) {
+        posts(
+          first: $first,
+          where: {
+            orderby: { field: DATE, order: DESC },
+            categoryName: $categoryName,
+            notIn: $notIn
+          }
+        ) {
+          nodes {
+            ${POST_FIELDS}
+          }
+        }
+      }
+    `,
+    {
+      first,
+      categoryName: categorySlug,
+      notIn: excludeIds.length ? excludeIds : null,
+    },
+  );
+
+  return data.posts?.nodes ?? [];
+}
+
+export async function getFeaturedPost(): Promise<BlogPost | null> {
+  // The "featured" article on Editorial is the most recently published post.
+  // (WPGraphQL's `onlySticky` arg isn't exposed on every WP install, so we
+  //  avoid depending on it.)
+  try {
+    const data = await graphQLRequest<{
+      latest: { nodes: BlogPost[] } | null;
+    }>(
+      `
+        query GetFeaturedPost {
+          latest: posts(first: 1, where: { orderby: { field: DATE, order: DESC } }) {
+            nodes {
+              ${POST_FIELDS}
+            }
+          }
+        }
+      `,
+    );
+    return data.latest?.nodes[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getPostCategories(limit = 20): Promise<PostCategory[]> {
+  const data = await graphQLRequest<{
+    categories: { nodes: PostCategory[] } | null;
+  }>(
+    `
+      query GetPostCategories($first: Int!) {
+        categories(first: $first, where: { hideEmpty: true }) {
+          nodes {
+            id
+            slug
+            name
+            count
+          }
+        }
+      }
+    `,
+    {
+      first: limit,
+    },
+  );
+
+  return data.categories?.nodes ?? [];
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {

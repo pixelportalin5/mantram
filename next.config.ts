@@ -9,6 +9,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        // /blog (index only) is now superseded by /editorial.
+        // Post detail routes /blog/[slug] are preserved as-is.
+        source: "/blog",
+        destination: "/editorial",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

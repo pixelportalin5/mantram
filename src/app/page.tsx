@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Gem, Headphones, RefreshCcw, Sparkles, type LucideIcon } from "lucide-react";
 
 import CategoryCarousel from "@/components/ui/CategoryCarousel";
 import ProductCarousel from "@/components/ui/ProductCarousel";
@@ -74,35 +75,48 @@ function Hero({ product }: { product: Product | null }) {
 }
 
 function ValueRow() {
-  const items = [
+  const items: Array<{ title: string; copy: string; icon: LucideIcon }> = [
     {
       title: "Considered Curation",
       copy: "A small, intentional catalog refreshed by hand.",
+      icon: Gem,
     },
     {
       title: "Atelier Provenance",
       copy: "Every piece is sourced from independent makers.",
+      icon: Sparkles,
     },
     {
       title: "Concierge Service",
       copy: "Order assistance, sizing, and aftercare on request.",
+      icon: Headphones,
     },
     {
       title: "Effortless Returns",
       copy: "Two weeks to live with a piece before deciding.",
+      icon: RefreshCcw,
     },
   ];
 
   return (
     <section className="border-y border-[var(--color-line)] bg-white">
-      <div className="container-app grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((item) => (
-          <div key={item.title}>
-            <h3 className="text-[0.72rem] uppercase tracking-[0.24em] text-[var(--color-ink-soft)]">
-              {item.title}
+      <div className="container-app grid gap-x-10 gap-y-12 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:py-16">
+        {items.map(({ title, copy, icon: Icon }) => (
+          <div
+            key={title}
+            className="group flex flex-col items-start transition-transform duration-300 ease-out hover:-translate-y-0.5"
+          >
+            <Icon
+              aria-hidden="true"
+              size={28}
+              strokeWidth={1.25}
+              className="text-[#2f2a24] transition-colors duration-300 group-hover:text-[var(--color-gold)]"
+            />
+            <h3 className="mt-5 text-[0.72rem] uppercase tracking-[0.24em] text-[var(--color-ink-soft)]">
+              {title}
             </h3>
             <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-              {item.copy}
+              {copy}
             </p>
           </div>
         ))}
@@ -301,7 +315,7 @@ export default async function HomePage() {
                 </h2>
               </div>
               <Link
-                href="/blog"
+                href="/editorial"
                 className="border-b border-[var(--color-ink-soft)] pb-1 text-[0.7rem] uppercase tracking-[0.24em] text-[var(--color-ink-soft)] transition hover:text-[var(--color-faint)]"
               >
                 Read the journal

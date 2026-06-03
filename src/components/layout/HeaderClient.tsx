@@ -168,7 +168,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
 
           <div className="flex items-center gap-1 justify-self-end md:gap-2">
             <Link
-              href="/blog"
+              href="/editorial"
               className="hidden px-3 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-ink-soft)] hover:text-[var(--color-faint)] xl:inline"
             >
               Editorial
@@ -314,32 +314,37 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
           </div>
 
           {megaOpen && categories.length ? (
-            <div className="absolute inset-x-0 top-full border-y border-[var(--color-line)] bg-white shadow-[var(--shadow-luxury)]">
-              <div className="container-app grid gap-12 py-10 lg:grid-cols-[1.2fr_0.9fr_0.9fr]">
-                <div>
-                  <p className="eyebrow mb-6">Shop by Category</p>
-                  <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+            <div className="animate-mega-enter absolute inset-x-0 top-full border-y border-[var(--color-line)] bg-white shadow-[var(--shadow-luxury)]">
+              <div className="mx-auto flex w-full max-w-[1080px] flex-wrap justify-center gap-x-12 gap-y-8 px-6 py-8 lg:flex-nowrap lg:items-start lg:gap-x-14 lg:px-10">
+                <div className="w-full lg:w-[240px] lg:shrink-0">
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--color-faint)] mb-4">
+                    Shop by Category
+                  </p>
+                  <ul className="space-y-0.5">
                     {categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        href={`/shop?category=${category.slug}`}
-                        className="group flex items-center justify-between border-b border-[var(--color-line-soft)] py-2 text-sm tracking-[0.04em] text-[var(--color-ink-soft)] hover:text-[var(--color-faint)]"
-                      >
-                        <span>{category.name}</span>
-                        <span className="text-xs text-[var(--color-faint)]">
-                          {category.count ?? 0}
-                        </span>
-                      </Link>
+                      <li key={category.id}>
+                        <Link
+                          href={`/shop?category=${category.slug}`}
+                          className="flex items-center justify-between rounded-sm border-b border-[var(--color-line-soft)] px-2 py-1.5 text-[14px] tracking-[0.02em] text-[var(--color-ink-soft)] transition-colors duration-200 hover:bg-[rgba(0,0,0,0.03)] hover:text-[var(--color-ink-soft)]"
+                        >
+                          <span>{category.name}</span>
+                          <span className="text-[11px] text-[var(--color-faint)]">
+                            {category.count ?? 0}
+                          </span>
+                        </Link>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
 
                 {featuredCategory ? (
-                  <div>
-                    <p className="eyebrow mb-6">Featured Collection</p>
+                  <div className="w-full lg:w-[260px] lg:shrink-0">
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--color-faint)] mb-4">
+                      Featured Collection
+                    </p>
                     <Link
                       href={`/shop?category=${featuredCategory.slug}`}
-                      className="group block"
+                      className="group block transition-transform duration-300 ease-out hover:-translate-y-1"
                     >
                       <div className="relative aspect-[4/5] overflow-hidden bg-[var(--color-bg-warm)]">
                         {featuredCategory.image?.sourceUrl ? (
@@ -350,28 +355,31 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
                             }
                             fill
                             unoptimized
-                            sizes="280px"
+                            sizes="260px"
                             className="object-cover transition duration-700 group-hover:scale-[1.04]"
                           />
                         ) : null}
                       </div>
-                      <p className="mt-4 text-sm uppercase tracking-[0.2em]">
+                      <p className="mt-3 text-[13px] uppercase tracking-[0.2em]">
                         {featuredCategory.name}
                       </p>
                     </Link>
                   </div>
                 ) : null}
 
-                <div className="bg-[var(--color-bg-soft)] p-8">
-                  <p className="eyebrow">New Arrivals</p>
-                  <h3 className="display-3 mt-4">A quiet luxury, refined daily.</h3>
-                  <p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">
-                    Every piece is sourced and curated to outlast trend cycles. Explore
-                    the catalog, published live from our atelier.
+                <div className="w-full bg-[var(--color-bg-soft)] p-6 lg:w-[280px] lg:shrink-0">
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--color-faint)]">
+                    New Arrivals
+                  </p>
+                  <h3 className="mt-3 font-serif text-[22px] font-light leading-snug tracking-[-0.02em]">
+                    A quiet luxury, refined daily.
+                  </h3>
+                  <p className="mt-3 text-[13px] leading-6 text-[var(--color-muted)]">
+                    Pieces sourced and curated to outlast trend cycles.
                   </p>
                   <Link
                     href="/shop"
-                    className="mt-6 inline-block border-b border-[var(--color-ink-soft)] pb-1 text-[0.72rem] uppercase tracking-[0.22em]"
+                    className="mt-5 inline-block border-b border-[var(--color-ink-soft)] pb-1 text-[11px] uppercase tracking-[0.22em] transition-colors duration-200 hover:text-[var(--color-faint)]"
                   >
                     View All Products
                   </Link>
@@ -462,7 +470,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
               ) : null}
 
               <Link
-                href="/blog"
+                href="/editorial"
                 className="flex items-center justify-between border-b border-[var(--color-line-soft)] py-4 text-sm uppercase tracking-[0.2em]"
               >
                 Editorial
