@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import PasswordInput from "@/components/auth/PasswordInput";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { sanitiseRedirectPath } from "@/lib/auth-guard";
@@ -65,19 +66,15 @@ export default function LoginForm() {
         />
       </label>
 
-      <label className="block">
-        <span className="label">Password</span>
-        <input
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="input"
-          placeholder="••••••••"
-        />
-      </label>
+      <PasswordInput
+        label="Password"
+        name="password"
+        autoComplete="current-password"
+        required
+        value={password}
+        onChange={setPassword}
+        placeholder="••••••••"
+      />
 
       <div className="flex justify-end">
         <Link

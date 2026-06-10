@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import PasswordInput from "@/components/auth/PasswordInput";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { siteConfig } from "@/lib/site-config";
@@ -112,31 +113,25 @@ export default function RegisterForm() {
         />
       </label>
 
-      <label className="block">
-        <span className="label">Password</span>
-        <input
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="input"
-          placeholder="Minimum 8 characters"
-        />
-      </label>
+      <PasswordInput
+        label="Password"
+        name="password"
+        autoComplete="new-password"
+        required
+        minLength={8}
+        value={password}
+        onChange={setPassword}
+        placeholder="Minimum 8 characters"
+      />
 
-      <label className="block">
-        <span className="label">Confirm Password</span>
-        <input
-          type="password"
-          autoComplete="new-password"
-          required
-          value={confirm}
-          onChange={(event) => setConfirm(event.target.value)}
-          className="input"
-        />
-      </label>
+      <PasswordInput
+        label="Confirm Password"
+        name="confirm-password"
+        autoComplete="new-password"
+        required
+        value={confirm}
+        onChange={setConfirm}
+      />
 
       {error ? (
         <div

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import PasswordInput from "@/components/auth/PasswordInput";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
@@ -69,30 +70,24 @@ export default function ResetPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <label className="block">
-        <span className="label">New Password</span>
-        <input
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="input"
-        />
-      </label>
+      <PasswordInput
+        label="New Password"
+        name="password"
+        autoComplete="new-password"
+        required
+        minLength={8}
+        value={password}
+        onChange={setPassword}
+      />
 
-      <label className="block">
-        <span className="label">Confirm Password</span>
-        <input
-          type="password"
-          autoComplete="new-password"
-          required
-          value={confirm}
-          onChange={(event) => setConfirm(event.target.value)}
-          className="input"
-        />
-      </label>
+      <PasswordInput
+        label="Confirm Password"
+        name="confirm-password"
+        autoComplete="new-password"
+        required
+        value={confirm}
+        onChange={setConfirm}
+      />
 
       {error ? (
         <div
