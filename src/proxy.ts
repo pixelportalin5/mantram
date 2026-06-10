@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const SESSION_COOKIE = "mantram_session";
+const SESSION_COOKIE = "mantriva_session";
 
 const PROTECTED_PREFIXES = ["/account"];
 const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];

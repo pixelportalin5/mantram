@@ -5,7 +5,7 @@ import {
 
 if (typeof window !== "undefined") {
   throw new Error(
-    "[mantram] @/lib/graphql is server-only. It must not be imported, directly or transitively, by a Client Component. Use @/lib/strings for shared utilities and @/lib/wp-client for client-side GraphQL calls.",
+    "[mantriva] @/lib/graphql is server-only. It must not be imported, directly or transitively, by a Client Component. Use @/lib/strings for shared utilities and @/lib/wp-client for client-side GraphQL calls.",
   );
 }
 

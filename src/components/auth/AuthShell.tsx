@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { siteConfig } from "@/lib/site-config";
+
 type AuthShellProps = {
   eyebrow: string;
   title: string;
@@ -24,7 +26,7 @@ export default function AuthShell({
             href="/"
             className="block text-center text-[0.7rem] uppercase tracking-[0.32em] text-[var(--color-faint)]"
           >
-            Mantram
+            {siteConfig.brandName}
           </Link>
           <div className="mt-10 border border-[var(--color-line)] bg-white p-8 shadow-[var(--shadow-luxury-sm)] lg:p-10">
             <p className="eyebrow">{eyebrow}</p>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import type { WordPressPage } from "@/lib/graphql";
+import { siteConfig } from "@/lib/site-config";
 
 const PILLARS = [
   "Authentic sourcing",
@@ -87,7 +88,7 @@ export function AboutHero({ wpPage }: { wpPage: WordPressPage | null }) {
           The House
         </p>
         <h1 className="display-1 mt-6 mx-auto max-w-4xl">
-          {wpPage?.title || "About Mantram"}
+          {wpPage?.title || `About ${siteConfig.brandName}`}
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-[15px] leading-8 text-[var(--color-muted)]">
           A modern destination for crystals, gemstone jewellery, healing objects and
@@ -100,7 +101,9 @@ export function AboutHero({ wpPage }: { wpPage: WordPressPage | null }) {
           <Image
             src={wpPage!.featuredImage!.node!.sourceUrl as string}
             alt={
-              wpPage?.featuredImage?.node?.altText || wpPage?.title || "Mantram"
+              wpPage?.featuredImage?.node?.altText ||
+              wpPage?.title ||
+              siteConfig.brandName
             }
             fill
             priority
@@ -153,7 +156,7 @@ export function OurStory({ wpPage }: { wpPage: WordPressPage | null }) {
           ) : (
             <div className="rich-text mt-6 space-y-5">
               <p>
-                Mantram began as a quiet rebellion against fast trend cycles —
+                {siteConfig.brandName} began as a quiet rebellion against fast trend cycles —
                 a small house dedicated to objects with weight: the crystal you
                 place by your window, the gemstone you wear against your skin,
                 the talisman that sits on your bedside.
@@ -322,7 +325,7 @@ export function FounderPhilosophy() {
           </p>
           <footer className="mt-10">
             <p className="text-[12px] uppercase tracking-[0.28em] text-[var(--color-ink-soft)]">
-              The Mantram Atelier
+              The {siteConfig.brandName} Atelier
             </p>
             <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-[var(--color-faint)]">
               Founding Principle

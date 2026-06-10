@@ -94,7 +94,7 @@ async function forwardToWebhook(payload: ContactPayload): Promise<boolean> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        source: "mantram-storefront",
+        source: "mantriva-storefront",
         receivedAt: new Date().toISOString(),
         ...payload,
       }),

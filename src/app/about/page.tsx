@@ -8,12 +8,13 @@ import {
   Statistics,
 } from "@/components/about/AboutSections";
 import { getPageByUri, stripHtml } from "@/lib/graphql";
+import { siteConfig } from "@/lib/site-config";
 
 export async function generateMetadata() {
   const page = await getPageByUri("about");
   const description = page?.content
     ? stripHtml(page.content).slice(0, 155)
-    : "Mantram is a modern destination for crystals, gemstone jewellery, healing objects and intentional living.";
+    : `${siteConfig.brandName} is a modern destination for crystals, gemstone jewellery, healing objects and intentional living.`;
 
   return {
     title: page?.title ?? "About",

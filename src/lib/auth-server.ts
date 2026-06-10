@@ -1,6 +1,6 @@
 if (typeof window !== "undefined") {
   throw new Error(
-    "[mantram] @/lib/auth-server is server-only. It must not be imported from a Client Component or client-side bundle.",
+    "[mantriva] @/lib/auth-server is server-only. It must not be imported from a Client Component or client-side bundle.",
   );
 }
 
@@ -13,7 +13,7 @@ import type {
 } from "@/lib/auth-types";
 import { GraphQLClientError, wpRequest } from "@/lib/wp-client";
 
-const SESSION_COOKIE = "mantram_session";
+const SESSION_COOKIE = "mantriva_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14; // 14 days
 
 type SessionPayload = {

@@ -24,12 +24,19 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.siteUrl),
   title: {
     default: `${siteConfig.brandName} — Curated luxury, ordered with intention.`,
     template: `%s · ${siteConfig.brandName}`,
   },
   description:
     `${siteConfig.brandName} is a curated headless WooCommerce storefront delivering quietly luxurious pieces. Catalog, editorial, and account experiences are powered live by WordPress.`,
+  applicationName: siteConfig.brandName,
+  openGraph: {
+    siteName: siteConfig.brandName,
+    type: "website",
+    locale: "en_IN",
+  },
 };
 
 export default async function RootLayout({

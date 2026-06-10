@@ -19,7 +19,7 @@ import { getPageByUri, stripHtml } from "@/lib/graphql";
 import { siteConfig } from "@/lib/site-config";
 
 const FALLBACK_CONTACT = {
-  email: "hello@mantram.com",
+  email: "hello@mantriva.in",
   phone: "+91 98765 43210",
   address: "Gurgaon, India",
 };
@@ -86,7 +86,7 @@ export async function generateMetadata() {
   const page = await getPageByUri("contact");
   const description = page?.content
     ? stripHtml(page.content).slice(0, 155)
-    : "Speak with the Mantram studio for product enquiries, sourcing, gifting, orders, and bespoke recommendations.";
+    : `Speak with the ${siteConfig.brandName} studio for product enquiries, sourcing, gifting, orders, and bespoke recommendations.`;
 
   return {
     title: page?.title ?? "Contact",

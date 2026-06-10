@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { siteConfig } from "@/lib/site-config";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function RegisterForm() {
         firstName: firstName || undefined,
         lastName: lastName || undefined,
       });
-      notify("Welcome to Mantram.", "success");
+      notify(`Welcome to ${siteConfig.brandName}.`, "success");
       router.replace("/account");
       router.refresh();
     } catch (caught) {
@@ -139,7 +140,8 @@ export default function RegisterForm() {
       </button>
 
       <p className="text-center text-xs leading-5 text-[var(--color-faint)]">
-        By continuing you agree to receive transactional communications from Mantram.
+        By continuing you agree to receive transactional communications from{" "}
+        {siteConfig.brandName}.
       </p>
     </form>
   );

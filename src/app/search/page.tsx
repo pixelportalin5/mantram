@@ -6,6 +6,7 @@ import {
   getProductListing,
   searchSuggestions,
 } from "@/lib/graphql";
+import { siteConfig } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +28,8 @@ export async function generateMetadata({
   return {
     title: query ? `Search · ${query}` : "Search",
     description: query
-      ? `Live search results from the Mantram catalog for “${query}”.`
-      : "Search the Mantram catalog.",
+      ? `Live search results from the ${siteConfig.brandName} catalog for “${query}”.`
+      : `Search the ${siteConfig.brandName} catalog.`,
     robots: { index: false, follow: true },
   };
 }

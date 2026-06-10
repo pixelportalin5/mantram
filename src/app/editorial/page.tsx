@@ -8,11 +8,11 @@ import {
   getPostCategories,
   getPosts,
 } from "@/lib/graphql";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata = {
   title: "Editorial",
-  description:
-    "Stories, rituals and insights from the Mantram studio — crystals, mindful living, healing traditions and intentional design.",
+  description: `Stories, rituals and insights from the ${siteConfig.brandName} studio — crystals, mindful living, healing traditions and intentional design.`,
 };
 
 export const dynamic = "force-dynamic";

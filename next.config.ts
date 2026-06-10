@@ -5,7 +5,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "goldenrod-badger-491166.hostingersite.com",
+        hostname: "mantriva.in",
+      },
+      {
+        protocol: "https",
+        hostname: "www.mantriva.in",
       },
     ],
   },
