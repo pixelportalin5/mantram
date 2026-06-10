@@ -35,7 +35,7 @@ export default async function AccountPage() {
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Name"
           value={
@@ -123,15 +123,17 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div className="border border-[var(--color-line)] bg-white p-5">
+    <div className="stat-card border border-[var(--color-line)] bg-white p-5">
       <p className="text-[0.65rem] uppercase tracking-[0.22em] text-[var(--color-faint)]">
         {label}
       </p>
-      <p className="mt-2 font-serif text-2xl text-[var(--color-ink-soft)]">
+      <p className="text-break-safe mt-2 font-serif text-2xl text-[var(--color-ink-soft)]">
         {value}
       </p>
       {hint ? (
-        <p className="mt-1 text-xs text-[var(--color-muted)]">{hint}</p>
+        <p className="text-break-safe mt-1 text-xs text-[var(--color-muted)]">
+          {hint}
+        </p>
       ) : null}
     </div>
   );

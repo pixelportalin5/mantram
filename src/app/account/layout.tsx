@@ -2,13 +2,14 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import AccountSidebar from "@/components/account/AccountSidebar";
+import { loginRedirectPath } from "@/lib/auth-guard";
 import { getActiveSession } from "@/lib/auth-server";
 
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const result = await getActiveSession();
 
   if (result.status === "missing") {
-    redirect("/login?redirect=/account");
+    redirect(loginRedirectPath("/account"));
   }
 
   if (result.status === "refresh-required") {
@@ -32,9 +33,9 @@ export default async function AccountLayout({ children }: { children: ReactNode 
           <p className="eyebrow">Account</p>
           <h1 className="display-2 mt-3">Your dashboard</h1>
         </header>
-        <div className="grid gap-10 pt-10 lg:grid-cols-[240px_1fr] lg:gap-14">
+        <div className="account-layout-grid grid gap-10 pt-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-14">
           <AccountSidebar user={session.user} />
-          <div>{children}</div>
+          <div className="account-content">{children}</div>
         </div>
       </div>
     </main>

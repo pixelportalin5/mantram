@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { sanitiseRedirectPath } from "@/lib/auth-guard";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const redirect = searchParams.get("redirect") || "/account";
+  const redirect = sanitiseRedirectPath(searchParams.get("redirect"), "/account");
 
   useEffect(() => {
     if (isReady && isAuthenticated) {

@@ -6,21 +6,25 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 
-const CART_STORAGE_KEY = "luxury_cart";
+import { useAuth } from "@/context/AuthContext";
+import { AUTH_DEBUG } from "@/lib/auth-guard";
+import {
+  type CartItem,
+  GUEST_CART_KEY,
+  getCartOwnerKey,
+  logCartState,
+  mergeCartItems,
+  readCart,
+  removeCart,
+  writeCart,
+} from "@/lib/cart-storage";
 
-export type CartItem = {
-  databaseId: number;
-  name: string;
-  price: string;
-  quantity: number;
-  image: string | null;
-  slug?: string;
-  categoryName?: string;
-};
+export type { CartItem };
 
 type AddToCartItem = Omit<CartItem, "quantity"> & {
   quantity?: number;
@@ -28,9 +32,11 @@ type AddToCartItem = Omit<CartItem, "quantity"> & {
 
 type CartContextValue = {
   items: CartItem[];
+  cartOwner: string;
   addToCart: (item: AddToCartItem) => void;
   updateQuantity: (id: number, quantity: number) => void;
   removeFromCart: (id: number) => void;
+  clearCart: () => void;
   cartTotal: number;
   itemCount: number;
   checkoutAction: () => Promise<void>;
@@ -56,43 +62,94 @@ function parseWooCommercePrice(price: string): number {
   return Number.isFinite(parsedAmount) ? parsedAmount : 0;
 }
 
-function readStoredCart(): CartItem[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const storedCart = window.localStorage.getItem(CART_STORAGE_KEY);
-
-    if (!storedCart) {
-      return [];
-    }
-
-    const parsedCart = JSON.parse(storedCart) as CartItem[];
-
-    return Array.isArray(parsedCart) ? parsedCart : [];
-  } catch {
-    return [];
-  }
-}
-
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { user, isReady: authReady } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [cartOwner, setCartOwner] = useState<string>(GUEST_CART_KEY);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const previousOwnerRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    setItems(readStoredCart());
-    setIsHydrated(true);
-  }, []);
+  const ownerKey = useMemo(() => getCartOwnerKey(user), [user]);
 
+  // Load / switch cart when auth identity changes.
   useEffect(() => {
-    if (!isHydrated) {
+    if (!authReady) return;
+
+    const previousOwner = previousOwnerRef.current;
+
+    if (previousOwner === null) {
+      // First hydration after auth is ready.
+      if (user) {
+        const guestItems = readCart(GUEST_CART_KEY);
+        const userItems = readCart(ownerKey);
+
+        if (guestItems.length > 0) {
+          const merged = mergeCartItems(userItems, guestItems);
+          writeCart(ownerKey, merged);
+          removeCart(GUEST_CART_KEY);
+          setItems(merged);
+        } else {
+          setItems(userItems);
+        }
+      } else {
+        setItems(readCart(GUEST_CART_KEY));
+      }
+
+      previousOwnerRef.current = ownerKey;
+      setCartOwner(ownerKey);
+      setIsHydrated(true);
+      logCartState(user, ownerKey, readCart(ownerKey));
       return;
     }
 
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  }, [isHydrated, items]);
+    if (previousOwner === ownerKey) {
+      return;
+    }
+
+    // Logout: signed-in → guest — clear UI cart and start fresh guest session.
+    if (!user && previousOwner.startsWith("cart:user:")) {
+      writeCart(GUEST_CART_KEY, []);
+      setItems([]);
+      setCartOwner(GUEST_CART_KEY);
+      previousOwnerRef.current = GUEST_CART_KEY;
+      if (AUTH_DEBUG) {
+        console.log("Cart Cleared");
+      }
+      logCartState(null, GUEST_CART_KEY, []);
+      return;
+    }
+
+    // Login: guest → user — merge guest cart into user cart, then drop guest key.
+    if (user && previousOwner === GUEST_CART_KEY) {
+      const guestItems = readCart(GUEST_CART_KEY);
+      const userItems = readCart(ownerKey);
+      const merged = mergeCartItems(userItems, guestItems);
+
+      writeCart(ownerKey, merged);
+      removeCart(GUEST_CART_KEY);
+      setItems(merged);
+      setCartOwner(ownerKey);
+      previousOwnerRef.current = ownerKey;
+      logCartState(user, ownerKey, merged);
+      return;
+    }
+
+    // User switch (A → B) or other owner change — load only the new owner's cart.
+    const nextItems = readCart(ownerKey);
+    setItems(nextItems);
+    setCartOwner(ownerKey);
+    previousOwnerRef.current = ownerKey;
+    logCartState(user, ownerKey, nextItems);
+  }, [authReady, ownerKey, user]);
+
+  // Persist in-memory cart to the active owner's key only.
+  useEffect(() => {
+    if (!isHydrated || !authReady) return;
+
+    writeCart(cartOwner, items);
+    logCartState(user, cartOwner, items);
+  }, [cartOwner, items, isHydrated, authReady, user]);
 
   const addToCart = useCallback((item: AddToCartItem) => {
     const quantityToAdd = item.quantity ?? 1;
@@ -127,6 +184,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((currentItems) =>
       currentItems.filter((item) => item.databaseId !== id),
     );
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setItems([]);
   }, []);
 
   const updateQuantity = useCallback(
@@ -193,9 +254,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       items,
+      cartOwner,
       addToCart,
       updateQuantity,
       removeFromCart,
+      clearCart,
       cartTotal,
       itemCount,
       checkoutAction,
@@ -203,12 +266,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }),
     [
       addToCart,
+      cartOwner,
       cartTotal,
       checkoutAction,
       isCheckingOut,
       itemCount,
       items,
       removeFromCart,
+      clearCart,
       updateQuantity,
     ],
   );

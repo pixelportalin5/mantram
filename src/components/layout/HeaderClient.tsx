@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -9,6 +10,7 @@ import CartDrawer from "@/components/layout/CartDrawer";
 import SearchBar from "@/components/search/SearchBar";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useSignOut } from "@/hooks/useSignOut";
 import type { ProductCategory } from "@/lib/graphql";
 import { siteConfig } from "@/lib/site-config";
 
@@ -47,7 +49,6 @@ const ICONS = {
   close: "M6 6l12 12M18 6L6 18",
   account:
     "M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0",
-  cart: "M6 7h12l-1 11.5A2 2 0 0 1 15 20.5H9a2 2 0 0 1-2-1.95L6 7Zm3 0V5a3 3 0 0 1 6 0v2",
   heart:
     "M12 21s-7.5-4.6-7.5-10.5A4.5 4.5 0 0 1 12 6.5a4.5 4.5 0 0 1 7.5 4c0 5.9-7.5 10.5-7.5 10.5Z",
   chevronDown: "M6 9l6 6 6-6",
@@ -67,7 +68,8 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
 
   const { items } = useCart();
   const cartQuantity = items.reduce((total, item) => total + item.quantity, 0);
-  const { user, isAuthenticated, logout, isReady } = useAuth();
+  const { user, isAuthenticated, isReady } = useAuth();
+  const signOut = useSignOut();
 
   const featuredCategory = useMemo(
     () => categories.find((category) => category.image?.sourceUrl) ?? categories[0],
@@ -124,19 +126,19 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 border-b border-[var(--color-line)] bg-[var(--color-bg)]/95 backdrop-blur transition-shadow ${
-          scrolled ? "shadow-[var(--shadow-luxury-sm)]" : ""
+        className={`luxury-header transition-shadow ${
+          scrolled ? "shadow-[0_8px_32px_rgba(15,12,10,0.48)]" : ""
         }`}
       >
-        <div className="bg-[var(--color-onyx)] px-4 py-2 text-center text-[0.68rem] uppercase tracking-[0.24em] text-white">
+        <div className="luxury-header__strip px-4 py-2 text-center text-[0.68rem] uppercase tracking-[0.24em]">
           Complimentary worldwide delivery on orders over ₹25,000
         </div>
 
-        <div className="container-app grid h-[72px] grid-cols-[1fr_auto_1fr] items-center">
+        <div className="luxury-header__bar container-app grid h-[72px] grid-cols-[1fr_auto_1fr] items-center">
           <div className="flex items-center gap-2 justify-self-start lg:gap-4">
             <button
               type="button"
-              className="-ml-2 inline-flex h-10 w-10 items-center justify-center lg:hidden"
+              className="luxury-header__icon-btn -ml-2 inline-flex h-10 w-10 items-center justify-center lg:hidden"
               onClick={() => setMobileOpen(true)}
               aria-label="Open menu"
             >
@@ -144,7 +146,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
             </button>
             <button
               type="button"
-              className="hidden h-10 w-10 items-center justify-center lg:inline-flex"
+              className="luxury-header__icon-btn hidden h-10 w-10 items-center justify-center lg:inline-flex"
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
             >
@@ -153,7 +155,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="hidden text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-faint)] hover:text-[var(--color-ink-soft)] lg:inline"
+              className="luxury-header__link hidden text-[0.72rem] uppercase tracking-[0.2em] lg:inline"
             >
               Search
             </button>
@@ -161,7 +163,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
 
           <Link
             href="/"
-            className="justify-self-center font-serif text-[1.4rem] font-light uppercase tracking-[0.46em] text-[var(--color-ink-soft)] md:text-[1.65rem]"
+            className="luxury-header__logo justify-self-center font-serif text-[1.4rem] font-light uppercase tracking-[0.46em] md:text-[1.65rem]"
           >
             {siteConfig.brandName}
           </Link>
@@ -169,13 +171,13 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
           <div className="flex items-center gap-1 justify-self-end md:gap-2">
             <Link
               href="/editorial"
-              className="hidden px-3 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-ink-soft)] hover:text-[var(--color-faint)] xl:inline"
+              className="luxury-header__link hidden px-3 text-[0.72rem] uppercase tracking-[0.2em] xl:inline"
             >
               Editorial
             </Link>
             <Link
               href="/contact"
-              className="hidden px-3 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-ink-soft)] hover:text-[var(--color-faint)] xl:inline"
+              className="luxury-header__link hidden px-3 text-[0.72rem] uppercase tracking-[0.2em] xl:inline"
             >
               Contact
             </Link>
@@ -183,7 +185,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
             <div ref={accountRef} className="relative hidden md:block">
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center"
+                className="luxury-header__icon-btn inline-flex h-10 w-10 items-center justify-center"
                 onClick={() => setAccountOpen((current) => !current)}
                 aria-label="Account"
                 aria-expanded={accountOpen}
@@ -203,7 +205,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
                         <p className="text-[0.68rem] uppercase tracking-[0.22em] text-[var(--color-faint)]">
                           Signed in as
                         </p>
-                        <p className="mt-1 font-serif text-lg text-[var(--color-ink-soft)]">
+                        <p className="text-break-safe mt-1 font-serif text-lg text-[var(--color-ink-soft)]">
                           {displayName}
                         </p>
                       </div>
@@ -230,7 +232,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
                       <button
                         type="button"
                         onClick={() => {
-                          logout();
+                          signOut();
                           setAccountOpen(false);
                         }}
                         className="btn btn-secondary w-full"
@@ -268,13 +270,13 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
 
             <button
               type="button"
-              className="relative inline-flex h-10 w-10 items-center justify-center"
+              className="luxury-header__icon-btn relative inline-flex h-10 w-10 items-center justify-center"
               onClick={() => setCartOpen(true)}
               aria-label={`Cart, ${cartQuantity} ${cartQuantity === 1 ? "item" : "items"}`}
             >
-              <Icon path={ICONS.cart} stroke={1.3} />
+              <ShoppingBag size={20} strokeWidth={1.5} aria-hidden="true" />
               {cartQuantity > 0 ? (
-                <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[var(--color-ink-soft)] px-1 text-[10px] font-semibold text-white">
+                <span className="luxury-header__cart-badge absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-semibold">
                   {cartQuantity}
                 </span>
               ) : null}
@@ -283,7 +285,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
         </div>
 
         <nav
-          className="relative hidden border-t border-[var(--color-line)] bg-white/60 lg:block"
+          className="luxury-header__nav relative hidden lg:block"
           onMouseLeave={() => setMegaOpen(false)}
           aria-label="Primary"
         >
@@ -291,7 +293,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
             <Link
               href="/shop"
               onMouseEnter={() => setMegaOpen(true)}
-              className="py-4 text-[0.72rem] uppercase tracking-[0.22em] text-[var(--color-ink-soft)] hover:text-[var(--color-faint)]"
+              className="luxury-header__link py-4 text-[0.72rem] uppercase tracking-[0.22em]"
             >
               Shop All
             </Link>
@@ -300,14 +302,14 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
                 key={category.id}
                 href={`/shop?category=${category.slug}`}
                 onMouseEnter={() => setMegaOpen(true)}
-                className="py-4 text-[0.72rem] uppercase tracking-[0.22em] text-[var(--color-ink-soft)] hover:text-[var(--color-faint)]"
+                className="luxury-header__link py-4 text-[0.72rem] uppercase tracking-[0.22em]"
               >
                 {category.name}
               </Link>
             ))}
             <Link
               href="/about"
-              className="py-4 text-[0.72rem] uppercase tracking-[0.22em] text-[var(--color-ink-soft)] hover:text-[var(--color-faint)]"
+              className="luxury-header__link py-4 text-[0.72rem] uppercase tracking-[0.2em]"
             >
               About
             </Link>
@@ -503,7 +505,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        logout();
+                        signOut();
                         setMobileOpen(false);
                       }}
                       className="btn btn-primary w-full"

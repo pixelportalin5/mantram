@@ -96,7 +96,7 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-10">
-      <section className="border border-[var(--color-line)] bg-white p-6 lg:p-8">
+      <section className="account-card border border-[var(--color-line)] bg-white p-6 lg:p-8">
         <h3 className="text-[0.72rem] uppercase tracking-[0.22em] text-[var(--color-ink-soft)]">
           Personal Details
         </h3>
@@ -144,7 +144,7 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
       ) : null}
 
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <span className="text-xs uppercase tracking-[0.16em] text-[var(--color-faint)]">
+        <span className="text-break-safe text-xs uppercase tracking-[0.16em] text-[var(--color-faint)]">
           {initialProfile?.username
             ? `Username: ${initialProfile.username}`
             : null}
@@ -171,13 +171,13 @@ function Field({
   className?: string;
 }) {
   return (
-    <label className={`block ${className}`}>
+    <label className={`block min-w-0 ${className}`}>
       <span className="label">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="input"
+        className="input text-break-safe"
       />
     </label>
   );
@@ -195,7 +195,7 @@ function AddressSection({
   compact?: boolean;
 }) {
   return (
-    <section className="border border-[var(--color-line)] bg-white p-6 lg:p-8">
+    <section className="account-card border border-[var(--color-line)] bg-white p-6 lg:p-8">
       <h3 className="text-[0.72rem] uppercase tracking-[0.22em] text-[var(--color-ink-soft)]">
         {title}
       </h3>

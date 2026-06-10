@@ -10,8 +10,10 @@ import {
   type ReactNode,
 } from "react";
 
+import { AUTH_DEBUG } from "@/lib/auth-guard";
 import { AuthApiError } from "@/lib/auth-errors";
 import type { AuthUser, CustomerProfile } from "@/lib/auth-types";
+import { clearClientAuthArtifacts } from "@/lib/clear-client-auth";
 
 type RegisterResult = {
   needsSignIn: boolean;
@@ -207,7 +209,11 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
   const logout = useCallback(async () => {
     setIsWorking(true);
     try {
+      if (AUTH_DEBUG) {
+        console.log("Logout Triggered");
+      }
       await postJson("/api/auth/logout");
+      clearClientAuthArtifacts();
       setUser(null);
     } finally {
       setIsWorking(false);

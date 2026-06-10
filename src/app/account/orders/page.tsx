@@ -106,7 +106,7 @@ export default async function OrdersPage() {
                               />
                             ) : null}
                           </div>
-                          <div className="flex-1">
+                          <div className="min-w-0 flex-1">
                             {product ? (
                               <Link
                                 href={`/product/${product.slug}`}

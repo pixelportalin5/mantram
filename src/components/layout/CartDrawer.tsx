@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import CartLineItem from "@/components/cart/CartLineItem";
 import { useCart } from "@/context/CartContext";
-import { useToast } from "@/context/ToastContext";
 import { formatCurrency } from "@/lib/format";
 
 type CartDrawerProps = {
@@ -14,27 +14,13 @@ type CartDrawerProps = {
 };
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
-  const {
-    items,
-    updateQuantity,
-    removeFromCart,
-    cartTotal,
-    itemCount,
-    checkoutAction,
-    isCheckingOut,
-  } = useCart();
-  const { notify } = useToast();
+  const router = useRouter();
+  const { items, updateQuantity, removeFromCart, cartTotal, itemCount } =
+    useCart();
 
-  const handleCheckout = async () => {
-    try {
-      await checkoutAction();
-    } catch (error) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : "Could not start checkout.";
-      notify(message, "error");
-    }
+  const handleCheckout = () => {
+    onClose();
+    router.push("/checkout");
   };
 
   useEffect(() => {
@@ -136,10 +122,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             <button
               type="button"
               onClick={handleCheckout}
-              disabled={isCheckingOut}
               className="btn btn-primary mt-5 w-full"
             >
-              {isCheckingOut ? "Preparing checkout…" : "Checkout"}
+              Checkout
             </button>
 
             <Link

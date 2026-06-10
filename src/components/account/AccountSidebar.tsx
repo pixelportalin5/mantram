@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { useSignOut } from "@/hooks/useSignOut";
 import type { AuthUser } from "@/lib/auth-types";
 
 const LINKS = [
@@ -20,8 +20,7 @@ type AccountSidebarProps = {
 
 export default function AccountSidebar({ user }: AccountSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { logout } = useAuth();
+  const signOut = useSignOut();
   const { notify } = useToast();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -31,10 +30,8 @@ export default function AccountSidebar({ user }: AccountSidebarProps) {
   const handleLogout = async () => {
     setSigningOut(true);
     try {
-      await logout();
+      await signOut();
       notify("You have been signed out.", "success");
-      router.replace("/");
-      router.refresh();
     } catch {
       notify("Could not sign out. Please try again.", "error");
     } finally {
@@ -43,14 +40,16 @@ export default function AccountSidebar({ user }: AccountSidebarProps) {
   };
 
   return (
-    <aside className="lg:sticky lg:top-32 lg:self-start">
-      <div className="rounded-none border border-[var(--color-line)] bg-white p-6">
+    <aside className="account-sidebar lg:sticky lg:top-32 lg:self-start">
+      <div className="account-card rounded-none border border-[var(--color-line)] bg-white p-6 shadow-[var(--shadow-luxury-sm)]">
         <p className="eyebrow">Signed in as</p>
-        <p className="mt-2 font-serif text-xl text-[var(--color-ink-soft)]">
+        <p className="text-break-safe mt-2 font-serif text-xl text-[var(--color-ink-soft)]">
           {displayName}
         </p>
         {user.email ? (
-          <p className="mt-1 text-xs text-[var(--color-faint)]">{user.email}</p>
+          <p className="text-break-safe mt-1 text-xs text-[var(--color-faint)]">
+            {user.email}
+          </p>
         ) : null}
       </div>
 

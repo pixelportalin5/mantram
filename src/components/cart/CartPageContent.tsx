@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import CartLineItem from "@/components/cart/CartLineItem";
 import OrderSummary from "@/components/cart/OrderSummary";
 import ProductCard from "@/components/ui/ProductCard";
 import { useCart } from "@/context/CartContext";
-import { useToast } from "@/context/ToastContext";
 import type { Product } from "@/lib/graphql";
 
 type CartPageContentProps = {
@@ -14,26 +14,11 @@ type CartPageContentProps = {
 };
 
 export default function CartPageContent({ recommendations }: CartPageContentProps) {
-  const {
-    items,
-    updateQuantity,
-    removeFromCart,
-    cartTotal,
-    checkoutAction,
-    isCheckingOut,
-  } = useCart();
-  const { notify } = useToast();
+  const router = useRouter();
+  const { items, updateQuantity, removeFromCart, cartTotal } = useCart();
 
-  const handleCheckout = async () => {
-    try {
-      await checkoutAction();
-    } catch (error) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : "Could not start checkout.";
-      notify(message, "error");
-    }
+  const handleCheckout = () => {
+    router.push("/checkout");
   };
 
   const cartProductIds = new Set(items.map((item) => item.databaseId));
@@ -87,7 +72,7 @@ export default function CartPageContent({ recommendations }: CartPageContentProp
             <aside className="lg:sticky lg:top-32 lg:self-start">
               <OrderSummary
                 subtotal={cartTotal}
-                isCheckingOut={isCheckingOut}
+                isCheckingOut={false}
                 onCheckout={handleCheckout}
               />
             </aside>
