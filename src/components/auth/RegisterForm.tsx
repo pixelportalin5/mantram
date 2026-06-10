@@ -45,12 +45,24 @@ export default function RegisterForm() {
     }
 
     try {
-      await register({
+      const result = await register({
         email,
         password,
         firstName: firstName || undefined,
         lastName: lastName || undefined,
       });
+
+      if (result.needsSignIn) {
+        notify(
+          result.message ??
+            "Your account was created. Sign in with your email and password.",
+          "success",
+        );
+        router.replace("/login?redirect=/account");
+        router.refresh();
+        return;
+      }
+
       notify(`Welcome to ${siteConfig.brandName}.`, "success");
       router.replace("/account");
       router.refresh();

@@ -1,3 +1,7 @@
+/**
+ * Next.js 16 request proxy (replaces deprecated middleware.ts).
+ * Single auth gate for protected routes — do not add src/middleware.ts.
+ */
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 

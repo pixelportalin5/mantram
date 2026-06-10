@@ -8,7 +8,10 @@
     "start": "next start -p 8888",
     "lint": "eslint .",
     "seed:categories": "node scripts/seed-woocommerce-categories.mjs",
-    "seed:categories:dry-run": "node scripts/seed-woocommerce-categories.mjs --dry-run"
+    "seed:categories:dry-run": "node scripts/seed-woocommerce-categories.mjs --dry-run",
+    "verify:jwt": "node scripts/verify-wp-jwt.mjs",
+    "diagnose:auth": "node scripts/diagnose-auth.mjs",
+    "package:wp-auth": "cd wordpress && zip -r mantriva-headless-auth.zip mantriva-headless-auth -x '*.DS_Store'"
   },
   "dependencies": {
     "embla-carousel-react": "^8.6.0",

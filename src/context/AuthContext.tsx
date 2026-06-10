@@ -10,7 +10,13 @@ import {
   type ReactNode,
 } from "react";
 
+import { AuthApiError } from "@/lib/auth-errors";
 import type { AuthUser, CustomerProfile } from "@/lib/auth-types";
+
+type RegisterResult = {
+  needsSignIn: boolean;
+  message?: string;
+};
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -23,7 +29,7 @@ type AuthContextValue = {
     password: string;
     firstName?: string;
     lastName?: string;
-  }) => Promise<void>;
+  }) => Promise<RegisterResult>;
   logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (input: {
@@ -53,7 +59,8 @@ async function postJson<T>(path: string, body?: unknown): Promise<T> {
     cache: "no-store",
   });
 
-  let payload: { error?: string } & Record<string, unknown> = {};
+  let payload: { error?: string; code?: string } & Record<string, unknown> =
+    {};
   try {
     payload = await response.json();
   } catch {
@@ -65,7 +72,9 @@ async function postJson<T>(path: string, body?: unknown): Promise<T> {
       typeof payload.error === "string" && payload.error
         ? payload.error
         : `Request failed (${response.status})`;
-    throw new Error(message);
+    const code =
+      typeof payload.code === "string" ? payload.code : undefined;
+    throw new AuthApiError(message, code);
   }
 
   return payload as T;
@@ -118,15 +127,11 @@ type AuthProviderProps = {
 
 export function AuthProvider({ children, initialUser = null }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(initialUser);
-  const [isReady, setIsReady] = useState(initialUser !== undefined);
+  const [isReady, setIsReady] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
 
+  // Always validate session on mount so refresh / login updates navbar state.
   useEffect(() => {
-    if (initialUser !== null) {
-      setIsReady(true);
-      return;
-    }
-
     let cancelled = false;
     getJson<{ user: AuthUser | null }>("/api/auth/me")
       .then((data) => {
@@ -145,7 +150,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     return () => {
       cancelled = true;
     };
-  }, [initialUser]);
+  }, []);
 
   const refreshSession = useCallback(async () => {
     const data = await getJson<{ user: AuthUser | null }>("/api/auth/me");
@@ -172,13 +177,26 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     async ({ email, password, firstName, lastName }) => {
       setIsWorking(true);
       try {
-        const data = await postJson<{ user: AuthUser }>("/api/auth/register", {
+        const data = await postJson<{
+          user: AuthUser | null;
+          needsSignIn?: boolean;
+          message?: string;
+        }>("/api/auth/register", {
           email,
           password,
           firstName,
           lastName,
         });
-        setUser(data.user);
+
+        if (data.user) {
+          setUser(data.user);
+          return { needsSignIn: false };
+        }
+
+        return {
+          needsSignIn: Boolean(data.needsSignIn),
+          message: data.message,
+        };
       } finally {
         setIsWorking(false);
       }

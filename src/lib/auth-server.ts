@@ -11,16 +11,23 @@ import type {
   CustomerProfile,
   CustomerAddress,
 } from "@/lib/auth-types";
-import { GraphQLClientError, wpRequest } from "@/lib/wp-client";
+import {
+  graphqlFetchCustomer,
+  graphqlFetchViewer,
+  graphqlForgotPassword,
+  graphqlLogin,
+  graphqlRefreshAuthToken,
+  graphqlRegister,
+  graphqlResetPassword,
+  graphqlUpdateCustomer,
+  type GraphQLRegisterResult,
+  type GraphQLSessionPayload,
+} from "@/lib/graphql-auth";
 
 const SESSION_COOKIE = "mantriva_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14; // 14 days
 
-type SessionPayload = {
-  authToken: string;
-  refreshToken: string | null;
-  user: AuthUser;
-};
+type SessionPayload = GraphQLSessionPayload;
 
 export type Session = SessionPayload;
 
@@ -73,204 +80,11 @@ export async function destroySession(): Promise<void> {
   });
 }
 
-const LOGIN_MUTATION = `
-  mutation Login($username: String!, $password: String!) {
-    login(input: { username: $username, password: $password }) {
-      authToken
-      refreshToken
-      user {
-        id
-        databaseId
-        email
-        firstName
-        lastName
-      }
-    }
-  }
-`;
-
-const REGISTER_MUTATION = `
-  mutation Register($email: String!, $password: String!, $firstName: String, $lastName: String) {
-    registerUser(
-      input: {
-        username: $email
-        email: $email
-        password: $password
-        firstName: $firstName
-        lastName: $lastName
-      }
-    ) {
-      user {
-        id
-        databaseId
-        email
-        firstName
-        lastName
-      }
-    }
-  }
-`;
-
-const VIEWER_QUERY = `
-  query Viewer {
-    viewer {
-      id
-      databaseId
-      email
-      firstName
-      lastName
-    }
-  }
-`;
-
-const REFRESH_MUTATION = `
-  mutation Refresh($refreshToken: String!) {
-    refreshJwtAuthToken(input: { jwtRefreshToken: $refreshToken }) {
-      authToken
-    }
-  }
-`;
-
-const FORGOT_PASSWORD_MUTATION = `
-  mutation ForgotPassword($username: String!) {
-    sendPasswordResetEmail(input: { username: $username }) {
-      success
-    }
-  }
-`;
-
-const RESET_PASSWORD_MUTATION = `
-  mutation ResetPassword($key: String!, $login: String!, $password: String!) {
-    resetUserPassword(input: { key: $key, login: $login, password: $password }) {
-      user {
-        id
-        databaseId
-        email
-      }
-    }
-  }
-`;
-
-const CUSTOMER_QUERY = `
-  query Customer {
-    customer {
-      id
-      databaseId
-      email
-      firstName
-      lastName
-      username
-      billing {
-        firstName
-        lastName
-        company
-        address1
-        address2
-        city
-        state
-        postcode
-        country
-        email
-        phone
-      }
-      shipping {
-        firstName
-        lastName
-        company
-        address1
-        address2
-        city
-        state
-        postcode
-        country
-      }
-      orders(first: 25) {
-        nodes {
-          id
-          databaseId
-          orderNumber
-          status
-          date
-          total
-          lineItems {
-            nodes {
-              product {
-                node {
-                  id
-                  name
-                  slug
-                  ... on SimpleProduct {
-                    image {
-                      sourceUrl
-                      altText
-                    }
-                  }
-                  ... on VariableProduct {
-                    image {
-                      sourceUrl
-                      altText
-                    }
-                  }
-                }
-              }
-              quantity
-              total
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-const UPDATE_CUSTOMER_MUTATION = `
-  mutation UpdateCustomer(
-    $firstName: String,
-    $lastName: String,
-    $email: String,
-    $billing: CustomerAddressInput,
-    $shipping: CustomerAddressInput
-  ) {
-    updateCustomer(
-      input: {
-        firstName: $firstName
-        lastName: $lastName
-        email: $email
-        billing: $billing
-        shipping: $shipping
-      }
-    ) {
-      customer {
-        id
-        firstName
-        lastName
-        email
-      }
-    }
-  }
-`;
-
 export async function performLogin(
   username: string,
   password: string,
 ): Promise<SessionPayload> {
-  const data = await wpRequest<{
-    login: {
-      authToken: string | null;
-      refreshToken: string | null;
-      user: AuthUser | null;
-    } | null;
-  }>(LOGIN_MUTATION, { username, password });
-
-  if (!data.login?.authToken || !data.login?.user) {
-    throw new GraphQLClientError("Invalid email or password.");
-  }
-
-  return {
-    authToken: data.login.authToken,
-    refreshToken: data.login.refreshToken ?? null,
-    user: data.login.user,
-  };
+  return graphqlLogin(username, password);
 }
 
 export async function performRegister(input: {
@@ -278,19 +92,12 @@ export async function performRegister(input: {
   password: string;
   firstName?: string;
   lastName?: string;
-}): Promise<SessionPayload> {
-  await wpRequest(REGISTER_MUTATION, {
-    email: input.email,
-    password: input.password,
-    firstName: input.firstName ?? null,
-    lastName: input.lastName ?? null,
-  });
-
-  return performLogin(input.email, input.password);
+}): Promise<GraphQLRegisterResult> {
+  return graphqlRegister(input);
 }
 
 export async function performForgotPassword(username: string): Promise<void> {
-  await wpRequest(FORGOT_PASSWORD_MUTATION, { username });
+  return graphqlForgotPassword(username);
 }
 
 export async function performResetPassword(input: {
@@ -298,35 +105,17 @@ export async function performResetPassword(input: {
   login: string;
   password: string;
 }): Promise<void> {
-  await wpRequest(RESET_PASSWORD_MUTATION, input);
+  return graphqlResetPassword(input);
 }
 
 export async function fetchViewer(authToken: string): Promise<AuthUser | null> {
-  try {
-    const data = await wpRequest<{ viewer: AuthUser | null }>(
-      VIEWER_QUERY,
-      undefined,
-      authToken,
-    );
-    return data.viewer;
-  } catch {
-    return null;
-  }
+  return graphqlFetchViewer(authToken);
 }
 
 export async function fetchCustomer(
   authToken: string,
 ): Promise<CustomerProfile | null> {
-  try {
-    const data = await wpRequest<{ customer: CustomerProfile | null }>(
-      CUSTOMER_QUERY,
-      undefined,
-      authToken,
-    );
-    return data.customer;
-  } catch {
-    return null;
-  }
+  return graphqlFetchCustomer(authToken);
 }
 
 export async function updateCustomer(
@@ -339,20 +128,13 @@ export async function updateCustomer(
     shipping?: CustomerAddress | null;
   },
 ): Promise<void> {
-  await wpRequest(UPDATE_CUSTOMER_MUTATION, input, authToken);
+  return graphqlUpdateCustomer(authToken, input);
 }
 
 export async function refreshAuthToken(
   refreshToken: string,
 ): Promise<string | null> {
-  try {
-    const data = await wpRequest<{
-      refreshJwtAuthToken: { authToken: string | null } | null;
-    }>(REFRESH_MUTATION, { refreshToken });
-    return data.refreshJwtAuthToken?.authToken ?? null;
-  } catch {
-    return null;
-  }
+  return graphqlRefreshAuthToken(refreshToken);
 }
 
 export type ActiveSessionResult =
@@ -364,16 +146,6 @@ export type ActiveSessionResult =
 /**
  * Render-safe session reader. Validates the JWT against WordPress's `viewer`
  * query but NEVER writes cookies — safe to call from Server Components.
- *
- * Returns one of:
- *   - { status: "active", session }     — token is valid, render
- *   - { status: "missing" }             — no cookie, redirect to /login
- *   - { status: "refresh-required" }    — cookie present but stale; caller
- *                                          should bounce through
- *                                          /api/auth/refresh to rotate the JWT
- *   - { status: "invalid" }             — cookie present but no refresh token
- *                                          and viewer rejected; redirect to
- *                                          /api/auth/logout to clear it
  */
 export async function getActiveSession(): Promise<ActiveSessionResult> {
   const session = await readSession();
@@ -395,13 +167,7 @@ export async function getActiveSession(): Promise<ActiveSessionResult> {
 
 /**
  * Route-handler-only session resolver. Re-validates against WordPress and,
- * if the auth token has expired, rotates it via the refresh token —
- * persisting the new token to the cookie. MUST NOT be called from a
- * Server Component or `generateMetadata` (Next.js forbids cookie writes
- * outside Server Actions and Route Handlers).
- *
- * Returns null if the session cannot be recovered, in which case the cookie
- * has already been cleared.
+ * if the auth token has expired, rotates it via the refresh token.
  */
 export async function requireSession(): Promise<Session | null> {
   const session = await readSession();

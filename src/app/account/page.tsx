@@ -35,11 +35,20 @@ export default async function AccountPage() {
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Account"
+          label="Name"
+          value={
+            [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+            user.displayName ||
+            "—"
+          }
+          hint={profile?.username ? `Username: ${profile.username}` : undefined}
+        />
+        <Stat
+          label="Email"
           value={user.email ?? "—"}
-          hint={billingCity ? `Based in ${billingCity}` : "Manage your profile"}
+          hint={billingCity ? `Based in ${billingCity}` : "Primary contact"}
         />
         <Stat
           label="Orders"

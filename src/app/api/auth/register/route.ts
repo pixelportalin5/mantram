@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { REGISTERED_WITHOUT_SESSION_MESSAGE } from "@/lib/auth-errors";
 import { performRegister, writeSession } from "@/lib/auth-server";
 import { GraphQLClientError } from "@/lib/wp-client";
 
@@ -43,19 +44,33 @@ export async function POST(request: Request) {
   }
 
   try {
-    const session = await performRegister({
+    const result = await performRegister({
       email,
       password,
       firstName: firstName || undefined,
       lastName: lastName || undefined,
     });
-    await writeSession(session);
-    return NextResponse.json({ user: session.user });
+
+    if (result.status === "authenticated") {
+      await writeSession(result.session);
+      return NextResponse.json({ user: result.session.user });
+    }
+
+    return NextResponse.json(
+      {
+        registered: true,
+        user: null,
+        needsSignIn: true,
+        message: REGISTERED_WITHOUT_SESSION_MESSAGE,
+      },
+      { status: 201 },
+    );
   } catch (caught) {
     const message =
       caught instanceof GraphQLClientError
         ? caught.message
         : "Could not create your account. Please try again.";
+
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
