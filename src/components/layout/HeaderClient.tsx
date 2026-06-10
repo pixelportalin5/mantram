@@ -126,15 +126,16 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
   return (
     <>
       <header
-        className={`luxury-header transition-shadow ${
-          scrolled ? "shadow-[0_8px_32px_rgba(15,12,10,0.48)]" : ""
+        className={`site-header transition-shadow ${
+          scrolled ? "shadow-[var(--shadow-luxury-sm)]" : ""
         }`}
       >
-        <div className="luxury-header__strip px-4 py-2 text-center text-[0.68rem] uppercase tracking-[0.24em]">
+        <div className="luxury-header__strip header-full-bleed px-4 py-2 text-center text-[0.68rem] uppercase tracking-[0.24em]">
           Complimentary worldwide delivery on orders over ₹25,000
         </div>
 
-        <div className="luxury-header__bar container-app grid h-[72px] grid-cols-[1fr_auto_1fr] items-center">
+        <div className="main-header-bar header-full-bleed">
+          <div className="luxury-header__bar container-app grid h-[72px] grid-cols-[1fr_auto_1fr] items-center">
           <div className="flex items-center gap-2 justify-self-start lg:gap-4">
             <button
               type="button"
@@ -282,10 +283,11 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
               ) : null}
             </button>
           </div>
+          </div>
         </div>
 
         <nav
-          className="luxury-header__nav relative hidden lg:block"
+          className="header-category-nav header-full-bleed relative hidden lg:block"
           onMouseLeave={() => setMegaOpen(false)}
           aria-label="Primary"
         >
@@ -293,7 +295,7 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
             <Link
               href="/shop"
               onMouseEnter={() => setMegaOpen(true)}
-              className="luxury-header__link py-4 text-[0.72rem] uppercase tracking-[0.22em]"
+              className="header-category-nav__link py-4 text-[0.72rem] uppercase tracking-[0.22em]"
             >
               Shop All
             </Link>
@@ -302,14 +304,14 @@ export default function HeaderClient({ categories }: HeaderClientProps) {
                 key={category.id}
                 href={`/shop?category=${category.slug}`}
                 onMouseEnter={() => setMegaOpen(true)}
-                className="luxury-header__link py-4 text-[0.72rem] uppercase tracking-[0.22em]"
+                className="header-category-nav__link py-4 text-[0.72rem] uppercase tracking-[0.22em]"
               >
                 {category.name}
               </Link>
             ))}
             <Link
               href="/about"
-              className="luxury-header__link py-4 text-[0.72rem] uppercase tracking-[0.2em]"
+              className="header-category-nav__link py-4 text-[0.72rem] uppercase tracking-[0.2em]"
             >
               About
             </Link>
