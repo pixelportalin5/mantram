@@ -4,17 +4,31 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Product, ProductImage } from "@/lib/graphql";
+import {
+  getProductImageUrl,
+  getProductThumbnailUrl,
+} from "@/lib/strings";
 
 function imageKey(image: ProductImage, index: number) {
   return `${image.sourceUrl ?? "missing"}-${index}`;
 }
 
+function dedupeImages(images: ProductImage[]): ProductImage[] {
+  const seen = new Set<string>();
+  return images.filter((image) => {
+    const url = getProductImageUrl(image);
+    if (!url || seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  });
+}
+
 export default function ProductGallery({ product }: { product: Product }) {
   const images = useMemo(() => {
     const all = [product.image, ...(product.galleryImages?.nodes ?? [])].filter(
-      (image): image is ProductImage => Boolean(image?.sourceUrl),
+      (image): image is ProductImage => Boolean(getProductImageUrl(image)),
     );
-    return all;
+    return dedupeImages(all);
   }, [product.galleryImages?.nodes, product.image]);
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -24,6 +38,7 @@ export default function ProductGallery({ product }: { product: Product }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const active = images[activeIndex];
+  const activeSrc = getProductImageUrl(active);
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -47,9 +62,11 @@ export default function ProductGallery({ product }: { product: Product }) {
     };
   }, [lightboxOpen]);
 
-  if (!images.length) {
+  if (!images.length || !activeSrc) {
     return (
-      <div className="flex aspect-square w-full items-center justify-center bg-[var(--color-bg-warm)] text-center">
+      <div
+        className="product-gallery flex min-h-[min(50vh,400px)] items-center justify-center text-center leading-normal"
+      >
         <div>
           <p className="eyebrow">Product</p>
           <p className="mt-4 font-serif text-3xl">No imagery available</p>
@@ -62,43 +79,69 @@ export default function ProductGallery({ product }: { product: Product }) {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
-    setZoomPos({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    setZoomPos({
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y)),
+    });
   };
+
+  const zoomStyle = zoomActive
+    ? {
+        transform: "scale(1.75)",
+        transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+      }
+    : undefined;
+
+  const showThumbnails = images.length > 1;
 
   return (
     <>
-      <div className="grid gap-4 lg:grid-cols-[80px_1fr]">
-        {images.length > 1 ? (
-          <div className="order-2 -mx-1 flex gap-3 overflow-x-auto px-1 lg:order-1 lg:mx-0 lg:flex-col lg:px-0">
-            {images.map((image, index) => (
-              <button
-                key={imageKey(image, index)}
-                type="button"
-                onClick={() => setActiveIndex(index)}
-                className={`relative h-16 w-16 shrink-0 overflow-hidden border bg-[var(--color-bg-warm)] transition lg:h-20 lg:w-20 ${
-                  activeIndex === index
-                    ? "border-[var(--color-ink-soft)]"
-                    : "border-[var(--color-line)] hover:border-[var(--color-faint)]"
-                }`}
-                aria-label={`View image ${index + 1}`}
-              >
-                <Image
-                  src={image.sourceUrl as string}
-                  alt={image.altText || product.name}
-                  fill
-                  unoptimized
-                  sizes="80px"
-                  className="object-cover"
-                />
-              </button>
-            ))}
+      <div
+        className={
+          showThumbnails
+            ? "w-full min-w-0 lg:grid lg:grid-cols-[76px_minmax(0,1fr)] lg:items-start lg:gap-5"
+            : "w-full min-w-0"
+        }
+      >
+        {showThumbnails ? (
+          <div
+            className="order-2 -mx-1 flex gap-2.5 overflow-x-auto px-1 pb-1 lg:order-1 lg:mx-0 lg:flex-col lg:gap-3 lg:overflow-visible lg:px-0 lg:pb-0"
+          >
+            {images.map((image, index) => {
+              const thumbSrc = getProductThumbnailUrl(image) ?? getProductImageUrl(image);
+              if (!thumbSrc) return null;
+
+              return (
+                <button
+                  key={imageKey(image, index)}
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  className={`relative h-[68px] w-[68px] shrink-0 overflow-hidden border bg-[var(--color-bg-warm)] transition lg:h-[76px] lg:w-[76px] ${
+                    activeIndex === index
+                      ? "border-[var(--color-ink-soft)]"
+                      : "border-[var(--color-line)] hover:border-[var(--color-faint)]"
+                  }`}
+                  aria-label={`View image ${index + 1}`}
+                  aria-current={activeIndex === index ? "true" : undefined}
+                >
+                  <Image
+                    src={thumbSrc}
+                    alt={image.altText || product.name}
+                    fill
+                    unoptimized
+                    sizes="76px"
+                    className="object-cover"
+                  />
+                </button>
+              );
+            })}
           </div>
         ) : null}
 
-        <div className="order-1 lg:order-2">
+        <div className={showThumbnails ? "order-1 min-w-0 lg:order-2" : "min-w-0 w-full"}>
           <div
             ref={containerRef}
-            className="relative aspect-square overflow-hidden bg-[var(--color-bg-warm)]"
+            className="product-gallery cursor-zoom-in"
             onMouseEnter={() => setZoomActive(true)}
             onMouseLeave={() => setZoomActive(false)}
             onMouseMove={handleMove}
@@ -110,46 +153,35 @@ export default function ProductGallery({ product }: { product: Product }) {
             }}
             aria-label="View full size"
           >
-            {active?.sourceUrl ? (
-              <>
-                <Image
-                  src={active.sourceUrl}
-                  alt={active.altText || product.name}
-                  fill
-                  priority
-                  unoptimized
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                  className={`object-cover transition-transform duration-200 ${
-                    zoomActive ? "scale-150" : "scale-100"
-                  }`}
-                  style={
-                    zoomActive
-                      ? {
-                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                        }
-                      : undefined
-                  }
-                />
-                <div className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1 bg-white/85 px-2.5 py-1.5 text-[0.62rem] uppercase tracking-[0.18em] text-[var(--color-ink-soft)] backdrop-blur">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  >
-                    <path d="M21 21l-4-4M11 8v6M8 11h6M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z" />
-                  </svg>
-                  Zoom
-                </div>
-              </>
-            ) : null}
+            {/* Native img avoids Next/Image wrapper sizing that kept the bitmap tiny */}
+            <img
+              src={activeSrc}
+              alt={active.altText || product.name}
+              className="product-gallery-image transition-transform duration-300 ease-out"
+              style={zoomStyle}
+              decoding="async"
+              fetchPriority="high"
+            />
+            <div
+              className="pointer-events-none absolute bottom-4 right-4 inline-flex items-center gap-1.5 bg-white/90 px-3 py-1.5 text-[0.62rem] uppercase tracking-[0.18em] text-[var(--color-ink-soft)] backdrop-blur-sm"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              >
+                <path d="M21 21l-4-4M11 8v6M8 11h6M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z" />
+              </svg>
+              Zoom
+            </div>
           </div>
         </div>
       </div>
 
-      {lightboxOpen && active?.sourceUrl ? (
+      {lightboxOpen ? (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-fade-in">
           <button
             type="button"
@@ -169,13 +201,10 @@ export default function ProductGallery({ product }: { product: Product }) {
             </svg>
           </button>
           <div className="relative h-[88vh] w-full max-w-5xl">
-            <Image
-              src={active.sourceUrl}
+            <img
+              src={activeSrc}
               alt={active.altText || product.name}
-              fill
-              unoptimized
-              sizes="100vw"
-              className="object-contain"
+              className="h-full w-full object-contain"
             />
           </div>
           {images.length > 1 ? (

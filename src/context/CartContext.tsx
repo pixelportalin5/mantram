@@ -18,6 +18,8 @@ export type CartItem = {
   price: string;
   quantity: number;
   image: string | null;
+  slug?: string;
+  categoryName?: string;
 };
 
 type AddToCartItem = Omit<CartItem, "quantity"> & {
@@ -27,8 +29,10 @@ type AddToCartItem = Omit<CartItem, "quantity"> & {
 type CartContextValue = {
   items: CartItem[];
   addToCart: (item: AddToCartItem) => void;
+  updateQuantity: (id: number, quantity: number) => void;
   removeFromCart: (id: number) => void;
   cartTotal: number;
+  itemCount: number;
   checkoutAction: () => Promise<void>;
   isCheckingOut: boolean;
 };
@@ -125,12 +129,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const updateQuantity = useCallback(
+    (id: number, quantity: number) => {
+      if (quantity <= 0) {
+        removeFromCart(id);
+        return;
+      }
+
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.databaseId === id ? { ...item, quantity } : item,
+        ),
+      );
+    },
+    [removeFromCart],
+  );
+
   const cartTotal = useMemo(
     () =>
       items.reduce(
         (total, item) => total + parseWooCommercePrice(item.price) * item.quantity,
         0,
       ),
+    [items],
+  );
+
+  const itemCount = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items],
   );
 
@@ -169,12 +194,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       items,
       addToCart,
+      updateQuantity,
       removeFromCart,
       cartTotal,
+      itemCount,
       checkoutAction,
       isCheckingOut,
     }),
-    [addToCart, cartTotal, checkoutAction, isCheckingOut, items, removeFromCart],
+    [
+      addToCart,
+      cartTotal,
+      checkoutAction,
+      isCheckingOut,
+      itemCount,
+      items,
+      removeFromCart,
+      updateQuantity,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

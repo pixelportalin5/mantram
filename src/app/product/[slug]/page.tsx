@@ -75,10 +75,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <span className="text-[var(--color-ink-soft)]">{product.name}</span>
         </nav>
 
-        <div className="grid gap-12 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:py-16">
-          <ProductGallery product={product} />
+        <div className="grid gap-10 py-10 lg:grid-cols-2 lg:items-start lg:gap-12 xl:gap-16 lg:py-16">
+          <div className="min-w-0 w-full">
+            <ProductGallery product={product} />
+          </div>
 
-          <section className="lg:sticky lg:top-32 lg:self-start">
+          <section className="min-w-0 lg:sticky lg:top-32 lg:self-start">
             <div>
               {categories.length ? (
                 <div className="mb-5 flex flex-wrap gap-3">

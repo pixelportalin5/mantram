@@ -9,10 +9,37 @@ if (typeof window !== "undefined") {
   );
 }
 
+export type ProductImageSize = {
+  name: string | null;
+  sourceUrl: string | null;
+  width: string | number | null;
+  height: string | number | null;
+};
+
 export type ProductImage = {
   sourceUrl: string | null;
   altText: string | null;
+  mediaDetails?: {
+    width: number | null;
+    height: number | null;
+    sizes: ProductImageSize[] | null;
+  } | null;
 };
+
+const PRODUCT_IMAGE_FIELDS = `
+  sourceUrl
+  altText
+  mediaDetails {
+    width
+    height
+    sizes {
+      name
+      sourceUrl
+      width
+      height
+    }
+  }
+`;
 
 export type ProductCategorySummary = {
   id: string;
@@ -211,8 +238,7 @@ export const PRODUCT_FIELDS = `
   slug
   name
   image {
-    sourceUrl
-    altText
+    ${PRODUCT_IMAGE_FIELDS}
   }
   ... on SimpleProduct {
     price
@@ -220,8 +246,7 @@ export const PRODUCT_FIELDS = `
     salePrice
     galleryImages {
       nodes {
-        sourceUrl
-        altText
+        ${PRODUCT_IMAGE_FIELDS}
       }
     }
   }
@@ -231,8 +256,7 @@ export const PRODUCT_FIELDS = `
     salePrice
     galleryImages {
       nodes {
-        sourceUrl
-        altText
+        ${PRODUCT_IMAGE_FIELDS}
       }
     }
   }
@@ -242,16 +266,14 @@ export const PRODUCT_FIELDS = `
     salePrice
     galleryImages {
       nodes {
-        sourceUrl
-        altText
+        ${PRODUCT_IMAGE_FIELDS}
       }
     }
   }
   ... on GroupProduct {
     galleryImages {
       nodes {
-        sourceUrl
-        altText
+        ${PRODUCT_IMAGE_FIELDS}
       }
     }
   }

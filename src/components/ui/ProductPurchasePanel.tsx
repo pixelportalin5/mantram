@@ -37,6 +37,8 @@ export default function ProductPurchasePanel({ product }: { product: Product }) 
         name: purchasable.name,
         price: priceHtml,
         image: product.image?.sourceUrl ?? null,
+        slug: product.slug,
+        categoryName: product.productCategories?.nodes[0]?.name,
         quantity,
       });
       notify(`${purchasable.name} added to your bag.`, "success");

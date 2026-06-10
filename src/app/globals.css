@@ -335,6 +335,24 @@
     background-size: 200% 100%;
     animation: skeleton-shimmer 1.4s ease-in-out infinite;
   }
+
+  .product-gallery {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: var(--color-bg-warm);
+    line-height: 0;
+  }
+
+  .product-gallery-image {
+    width: 100%;
+    height: auto;
+    max-width: none;
+    max-height: min(85vh, 900px);
+    object-fit: contain;
+    object-position: top center;
+    display: block;
+  }
 }
 
 @keyframes skeleton-shimmer {

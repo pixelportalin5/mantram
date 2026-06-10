@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { formatPriceText } from "@/lib/format";
 import type { Product } from "@/lib/graphql";
+import { isUsableProductImageUrl } from "@/lib/strings";
 
 type ProductCardProps = {
   product: Product;
@@ -17,16 +18,27 @@ type ProductCardProps = {
 export default function ProductCard({ product, variant = "default" }: ProductCardProps) {
   const { addToCart } = useCart();
   const { notify } = useToast();
-  const [imageFailed, setImageFailed] = useState(false);
+  const [primaryFailed, setPrimaryFailed] = useState(false);
+  const [secondaryFailed, setSecondaryFailed] = useState(false);
 
-  const primaryImage = product.image?.sourceUrl;
+  const primaryImage = isUsableProductImageUrl(product.image?.sourceUrl)
+    ? product.image?.sourceUrl
+    : null;
+
   const secondaryImage = useMemo(() => {
     const gallery = product.galleryImages?.nodes ?? [];
-    return gallery.find((image) => image.sourceUrl && image.sourceUrl !== primaryImage)?.sourceUrl;
+    const candidate = gallery.find(
+      (image) =>
+        isUsableProductImageUrl(image.sourceUrl) &&
+        image.sourceUrl !== primaryImage,
+    );
+    return candidate?.sourceUrl ?? null;
   }, [primaryImage, product.galleryImages?.nodes]);
 
+  const showHoverSwap = Boolean(secondaryImage) && !secondaryFailed;
+
   const imageAlt = product.image?.altText || product.name;
-  const canRenderImage = Boolean(primaryImage) && !imageFailed;
+  const canRenderImage = Boolean(primaryImage) && !primaryFailed;
   const categoryName = product.productCategories?.nodes[0]?.name;
   const isOnSale = Boolean(
     product.salePrice && product.regularPrice && product.salePrice !== product.regularPrice,
@@ -38,6 +50,8 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
       name: product.name,
       price: product.price ?? "",
       image: primaryImage ?? null,
+      slug: product.slug,
+      categoryName: product.productCategories?.nodes[0]?.name,
     });
     notify(`${product.name} added to your bag.`, "success");
   };
@@ -54,12 +68,12 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
                 fill
                 sizes="(min-width: 1280px) 320px, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
                 className={`object-cover transition-all duration-700 ease-out ${
-                  secondaryImage ? "group-hover:opacity-0" : "group-hover:scale-[1.04]"
+                  showHoverSwap ? "group-hover:opacity-0" : "group-hover:scale-[1.04]"
                 }`}
                 unoptimized
-                onError={() => setImageFailed(true)}
+                onError={() => setPrimaryFailed(true)}
               />
-              {secondaryImage ? (
+              {secondaryImage && !secondaryFailed ? (
                 <Image
                   src={secondaryImage}
                   alt={imageAlt}
@@ -67,6 +81,7 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
                   sizes="(min-width: 1280px) 320px, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
                   className="absolute inset-0 object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
                   unoptimized
+                  onError={() => setSecondaryFailed(true)}
                 />
               ) : null}
             </>
